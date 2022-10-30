@@ -1,30 +1,33 @@
+import math
+
+
 class Problem:
 
     def __init__(self):
         # it a tree that is represented in the form of nested dictionary
         # where every key represents a node having child and last nodes
         # without child are represented in a list
-        # First symmetrical tree with each node having 2 children
+
         """self.tree = {
-            'A': {
-                'B': {
-                    'D':
-                        [3, 8]
-                    ,
-                    'E':
-                        [6, 4]
+                    'A': {
+                        'B': {
+                            'D':
+                                [3, 8]
+                            ,
+                            'E':
+                                [6, 4]
 
-                },
-                'C': {
-                    'F':
-                        [2, 3]
-                    ,
-                    'G':
-                        [1, 2]
+                        },
+                        'C': {
+                            'F':
+                                [2, 3]
+                            ,
+                            'G':
+                                [1, 2]
 
-                }
-            }
-        }"""
+                        }
+                    }
+                }"""
         # Second symmetrical tree with each node having 3 children
         '''self.tree = {
             'A': {
@@ -84,7 +87,7 @@ class Problem:
             }
         }
 
-    def apply_min_max(self, current_subtree=None, min_max_chose=max):
+    def apply_alpha_beta_pruning(self, current_subtree=None, min_max_chose=max, alpha=-math.inf, beta=math.inf):
         """
         Recursive function that gets a tree stored as dictionary
         and calls itself recursively to apply min max on the sub-tree
@@ -93,12 +96,14 @@ class Problem:
 
         :param current_subtree: type dict
         :param min_max_chose: is a function default value is max.
+        :param alpha: int value of alpha default -inf
+        :param beta: int value of alpha default +inf
         :return: an int
         """
+
         if current_subtree is None:
             current_subtree = self.tree
-            print('Min Max Started')
-
+            print('Alpha Beta Pruning Started')
         # list that contains integers that are returned from next recursive scope.
         # is a min or max of child nodes.
         returned_values = list()
@@ -109,22 +114,45 @@ class Problem:
         min_max_chose = max if min_max_chose == min else min
         # base condition where node does not have further children and is represented as a list
         if type(current_subtree) == list:
-            return min_max_chose(current_subtree)
+            values = list()
+            # iterating over the values of child nodes to update value of alpha and beta since this is last node
+            for value in current_subtree:
+                values.append(value)
+                if min_max_chose == max:
+                    alpha = max([alpha, value])
+                elif min_max_chose == min:
+                    beta = min([beta, value])
+                # print(f"Currently alpha={alpha}, beta={beta}")
+                # condition for pruning
+                if beta <= alpha:
+                    print(f"Pruned alpha {alpha}, beta {beta}")
+                    break
+
+            return min_max_chose(values)
         # available_keys has values of all available keys i-e child node
         available_keys = current_subtree.keys()
         # we iterate over these keys to get child subtrees
         for key in available_keys:
-            value = self.apply_min_max(current_subtree[key], min_max_chose)
+            value = self.apply_alpha_beta_pruning(current_subtree[key], min_max_chose, alpha, beta)
             returned_values.append(value)
-
-        print(f"Values {returned_values} are returned to {'max' if min_max_chose == min else 'min'} scope")
+            if min_max_chose == max:
+                alpha = max([alpha, value])
+            elif min_max_chose == min:
+                beta = min([beta, value])
+            print(f"Currently alpha={alpha}, beta={beta}")
+            # condition for pruning
+            if beta <= alpha:
+                print(f"Pruned alpha {alpha}, beta {beta}")
+                break
+        print(f"Values {returned_values} are returned to {'max' if min_max_chose == min else 'min'} scope"
+              f"and alpha= {alpha}, beta={beta}")
         # return min or max depending on which scope it is.
         return min_max_chose(returned_values)
 
 
 def main():
     p = Problem()
-    print(p.apply_min_max())
+    print(p.apply_alpha_beta_pruning())
 
 
 if __name__ == '__main__':

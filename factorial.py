@@ -1,10 +1,18 @@
-num = int(input("Enter a number : "))
-factorial = 1
-if num < 0:
-   print("Sorry, factorial does not exist for negative numbers")
-elif num == 0:
-   print("The factorial of 0 is 1")
+import math
+
+
+def factorial(number):
+    if number == 0:
+        return 1
+    else:
+        return number * factorial(number - 1)
+
+
+number = int(input("input number factorial :"))
+print(factorial(number))
+
+
+if number >= 0:
+    print(math.factorial(number))
 else:
-   for i in range(1,num + 1):
-       factorial = factorial*i
-   print("The factorial of",num,"is",factorial)
+    print("value is invalid")
