@@ -1,151 +1,104 @@
-#Tic Tac Toe Game
-#Created by Santosh Vasisht
-
-import random
+import math
 import time
+from Player import SmartComputer, RandomComputer, Human
 
-def display_board(board):
-    #Display the current state of the board and positions
-    print('\n\t  Board\t\tPositions')
-    for i in range(5):
-        for k in range(2):
-            print('\t', end = '')
-            for j in range(5):
-                if(i%2):
-                    if(j%2):
-                        print('+', end = ' ')
-                    else:
-                        print('-', end = ' ')
-                else:
-                    if(j%2):
-                        print('|', end = ' ')
-                    else:
-                        if(k):
-                            print(3*(i//2)+(j//2)+1, end = ' ')
-                        else:
-                            print(board[i//2][j//2], end = ' ')
-        print()
-    print()
 
-def input_position():
-    #Check for valid input
-    while(True):
-        ip = int(input("Enter a position (1-9): "))
-        if(ip in free):
-            break
-        print("Invalid position\n")
-    return ip
+class TicTacToe():
+    def __init__(self):
+        self.board = self.create_board()
+        self.actual_winner = None
 
-def input_level():
-    #Check for valid input
-    print("\nLevels\n1: Easy\n2: Medium\n3: Hard\n")
-    while(True):
-        ip = int(input("Choose a level (1-3): "))
-        if(ip == 1):
-            print("\tLevel Easy")
-            break
-        if(ip == 2):
-            print("\tLevel Medium")
-            break
-        if(ip == 3):
-            print("\tLevel Hard")
-            break
-        print("Invalid Level\n")
-    return ip
+    @staticmethod
+    def create_board():
+        return [' ' for _ in range(9)]
 
-def pick_pos():
-    if(level > 1):
-        if(level == 3):
-            #Pick attacking position
-            for i in range(len(match_table)):
-                if(match_table[i][1] == 2):
-                    for j in match_map.keys():
-                        if((i in match_map[j]) and (j in free)):
-                            return j
-        #Pick defending position
-        for i in range(len(match_table)):
-            if(match_table[i][0] == 2):
-                for j in match_map.keys():
-                    if((i in match_map[j]) and (j in free)):
-                        return j
-    return random.choice(free)
+    def board_show(self):
+        for cell in [self.board[i*3:(i+1)*3] for i in range(3)]:
+            print('| ' + ' | '.join(cell) + ' |')
 
-#Start playing
-play = 'y'
-while(play == 'y'):
-    #SETUP
-    board = [[' ', ' ', ' '] for _ in range(3)] #current board state
-    free = list(range(1, 10)) #available positions
-    match_table = [[0, 0] for _ in range(8)] #3 row matches, 3 column matches, 2 diagonal matches for X and O
-    match_map = { #maps the position to match in match_table
-        1: (0, 3, 6),
-        2: (0, 4),
-        3: (0, 5, 7),
-        4: (1, 3),
-        5: (1, 4, 6, 7),
-        6: (1, 5),
-        7: (2, 3, 7),
-        8: (2, 4),
-        9: (2, 5, 6)
-    }
-    turn = random.choice([-1, 1]) #whose turn to play
-    win = None #flag variable to continue playing till winner is found
-    print("\n\tTIC TAC TOE")
-    level = input_level()
-    display_board(board)
+    @staticmethod
+    def show_board_numbers():
+        number_from_board = [[str(i + 1) for i in range(j*3, (j+1)*3)] for j in range(3)]
+        for cell in number_from_board:
+            print('| ' + ' | '.join(cell) + ' |')
 
-    #GAMEPLAY
-    while(win == None):
-        #Continue playing till winner is found or it is a draw
-        if(turn == 1):
-            #Player's turn
-            print("Your Turn")
-            pos = input_position()
-            free.remove(pos)
+    def make_a_move(self, square, player):
+        if self.board[square] == ' ':
+            self.board[square] = player
+            if self.winner_rules(square, player):
+                self.actual_winner = player
+            return True
+        return False
 
-            #Change board state
-            board[(pos - 1) // 3][(pos - 1) % 3] = 'X'
-            display_board(board)
+    def winner_rules(self, square, player):
+        # Checking the row
+        row_index = math.floor(square / 3)
+        row = self.board[row_index*3:(row_index+1)*3]
+        if all([l == player for l in row]):
+            return True
 
-            #Update match_table
-            matches = match_map[pos]
-            for m in matches:
-                match_table[m][0] += 1
+        # Checking the column
+        col_index = square % 3
+        column = [self.board[col_index+i*3] for i in range(3)]
+        if all([l == player for l in column]):
+            return True
+
+        # Checking for diagonal
+        if square % 2 == 0:
+            principal_diagonal = [self.board[i] for i in [0, 4, 8]]
+            if all([l == player for l in principal_diagonal]):
+                return True
+
+            secondary_diagonal = [self.board[i] for i in [2, 4, 6]]
+            if all([l == player for l in secondary_diagonal]):
+                return True
+
+        return False
+
+    def null_squares(self):
+        return ' ' in self.board
+
+    def number_null_squares(self):
+        return self.board.count(' ')
+
+    def remaining_moves(self):
+        return [p for p, i in enumerate(self.board) if i == ' ']
+
+
+def play(game, x_player, o_player, show_game = True):
+    if show_game:
+        game.show_board_numbers()
+
+    player = 'X'
+    while game.null_squares():
+        if player == '0':
+            square = o_player.get_move(game)
         else:
-            #Computer's turn
-            print("Computer's turn")
-            time.sleep(1) #computer thinking time
-            pos = pick_pos()
-            free.remove(pos)
-            print("Computer picked position", pos)
+            square = x_player.get_move(game)
+        if game.make_a_move(square, player):
+            if show_game:
+                print(f'{player} makes a move to square {square}')
+                game.board_show()
+                print(' ')
 
-            #Change board state
-            board[(pos - 1) // 3][(pos - 1) % 3] = 'O'
-            display_board(board)
+            if game.actual_winner:
+                if show_game:
+                    print(f'{player} wins!')
+                return player
+            player = '0' if player == 'X' else 'X'
 
-            #Update match_table
-            matches = match_map[pos]
-            for m in matches:
-                match_table[m][1] += 1
-        
-        #Check for win or draw
-        if(len(free) == 0):
-            win = 0 #draw match
-        for i in range(len(match_table)):
-            if(match_table[i][0] == 3 or match_table[i][1] == 3):
-                win = turn #winner is found
-                break
-        turn *= -1 #next turn
+        time.sleep(.8)
 
-    #GAMEOVER
-    if(win == 1):
-        print("\tYOU WIN!\n")
-    elif(win == -1):
-        print("\tCOMPUTER WINS!\n")
-    else:
-        print("\tIT IS A DRAW!\n")
+    if show_game:
+        print('Tie!')
 
-    play = input('Do you want to play again? (y/n): ').lower()
 
-#Exit
-print("Thank you for playing Tic Tac Toe\n")
+if __name__ == '__main__':
+    #x_player = RandomComputer('0')
+    x_player = SmartComputer('0')
+    o_player = Human('X')
+    t = TicTacToe()
+    play(t, o_player, x_player, True)
+
+
+
